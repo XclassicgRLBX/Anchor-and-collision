@@ -1,0 +1,106 @@
+local players = game:GetService("Players")
+local player = players.LocalPlayer
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Parent = game:GetService("CoreGui")
+
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 300, 0, 180)
+frame.Position = UDim2.new(0.5, -150, 0.5, -90)
+frame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+frame.BorderSizePixel = 2
+frame.Active = true
+frame.Draggable = true
+frame.Parent = screenGui
+
+local textBox = Instance.new("TextBox")
+textBox.Size = UDim2.new(0, 280, 0, 30)
+textBox.Position = UDim2.new(0.5, -140, 0, 10)
+textBox.PlaceholderText = "Enter Part/Model Name"
+textBox.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+textBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+textBox.Parent = frame
+
+local anchorButton = Instance.new("TextButton")
+anchorButton.Size = UDim2.new(0, 135, 0, 40)
+anchorButton.Position = UDim2.new(0, 10, 0, 50)
+anchorButton.Text = "Toggle Anchored"
+anchorButton.BackgroundColor3 = Color3.fromRGB(100, 100, 255)
+anchorButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+anchorButton.Parent = frame
+
+local collisionButton = Instance.new("TextButton")
+collisionButton.Size = UDim2.new(0, 135, 0, 40)
+collisionButton.Position = UDim2.new(0, 155, 0, 50)
+collisionButton.Text = "Toggle Collision"
+collisionButton.BackgroundColor3 = Color3.fromRGB(255, 100, 100)
+collisionButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+collisionButton.Parent = frame
+
+local infoLabel = Instance.new("TextLabel")
+infoLabel.Size = UDim2.new(0, 280, 0, 30)
+infoLabel.Position = UDim2.new(0.5, -140, 0, 100)
+infoLabel.Text = "Parts: 0 | Models: 0"
+infoLabel.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+infoLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+infoLabel.Parent = frame
+
+local anchoredState = true
+local collisionState = true
+
+local function getPartsAndModels(object)
+    local parts, models = {}, {}
+    for _, descendant in ipairs(object:GetDescendants()) do
+        if descendant:IsA("BasePart") then
+            table.insert(parts, descendant)
+        elseif descendant:IsA("Model") then
+            table.insert(models, descendant)
+        end
+    end
+    return parts, models
+end
+
+local function toggleAnchored()
+    local objectName = textBox.Text
+    local object = workspace:FindFirstChild(objectName)
+    if object then
+        local parts, models = getPartsAndModels(object)
+        if #parts > 0 then
+            task.spawn(function()
+                for _, part in ipairs(parts) do
+                    part.Anchored = anchoredState
+                end
+            end)
+            anchoredState = not anchoredState
+            infoLabel.Text = "Anchored: " .. tostring(parts[1].Anchored) .. " | Parts: " .. #parts .. " | Models: " .. #models
+        else
+            infoLabel.Text = "No BaseParts found."
+        end
+    else
+        infoLabel.Text = "Object not found."
+    end
+end
+
+local function toggleCollision()
+    local objectName = textBox.Text
+    local object = workspace:FindFirstChild(objectName)
+    if object then
+        local parts, models = getPartsAndModels(object)
+        if #parts > 0 then
+            task.spawn(function()
+                for _, part in ipairs(parts) do
+                    part.CanCollide = collisionState
+                end
+            end)
+            collisionState = not collisionState
+            infoLabel.Text = "Collision: " .. tostring(parts[1].CanCollide) .. " | Parts: " .. #parts .. " | Models: " .. #models
+        else
+            infoLabel.Text = "No BaseParts found."
+        end
+    else
+        infoLabel.Text = "Object not found."
+    end
+end
+
+anchorButton.MouseButton1Click:Connect(toggleAnchored)
+collisionButton.MouseButton1Click:Connect(toggleCollision)
